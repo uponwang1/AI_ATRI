@@ -222,6 +222,25 @@
             html += "</table><p>🌾 最穩定的基準溫度 Tb = <b>" + data.best.Tb + "°C</b></p>";
             document.getElementById("gddResult").innerHTML = html;
         }
+        document.addEventListener("DOMContentLoaded", () => {
+    // ===== GDD 三段比較：預設日期（更穩 + 不覆蓋使用者已填值） =====
+    const defaults = {
+        start1: "2025-02-17",
+        end1:   "2025-05-02",
+        start2: "2025-06-24",
+        end2:   "2025-07-30",
+        start3: "2025-09-19",
+        end3:   "2025-10-20"
+    };
+
+    for (const [id, val] of Object.entries(defaults)) {
+        const el = document.getElementById(id);
+        if (!el) continue;          // 防呆：元素不存在就跳過
+        if (el.value) continue;     // 防呆：使用者已經填值就不覆蓋
+        el.value = val;
+    }
+});
+
     </script>
 
     <hr>
@@ -246,4 +265,5 @@
     </table>
 </body>
 </html>
+
 
