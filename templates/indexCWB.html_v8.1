@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>即時逐時氣象監控 v8.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei";
+            margin: 30px;
+            background: #fafafa;
+        }
+        h2 { margin-top: 0; }
+        .info-bar {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .box {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 220px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .value {
+            font-size: 26px;
+            font-weight: 800;
+        }
+        .label {
+            font-size: 14px;
+            color: #555;
+        }
+        .warn {
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            color: #664d03;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+        canvas {
+            width: 100%;
+            height: 420px !important;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+        }
+        .footer {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>🌐 即時逐時氣象監控（CWB8.1）</h2>
+
+{% if err_msg %}
+<div class="warn">
+    ⚠️ {{ err_msg }}
+</div>
+{% endif %}
+
+<div class="info-bar">
+    <div class="box">
+        <div class="label">目前氣溫</div>
+        <div class="value" id="tempDisplay">--°C</div>
+    </div>
+    <div class="box">
+        <div class="label">目前相對濕度</div>
+        <div class="value" id="humDisplay">-- %</div>
+    </div>
+    <div class="box">
+        <div class="label">最新觀測時間</div>
+        <div class="value" style="font-size:18px;" id="obsTime">--</div>
+    </div>
+</div>
+
+<canvas id="weatherChart"></canvas>
+
+{% if last_update_time %}
+<div class="footer">
+    🕒 後端最後更新時間：{{ last_update_time }}
+</div>
+{% endif %}
+
+<script>
+    const labels = {{ labels | tojson }};
+    const temps  = {{ temps  | tojson }};
+    const hums   = {{ hums   | tojson }};
+
+    // ===== 最新值顯示 =====
+    const lastTemp = temps.length ? temps[temps.length - 1] : null;
+    const lastHum  = hums.length  ? hums[hums.length - 1]  : null;
+    const lastTime = labels.length ? labels[labels.length - 1] : null;
+
+    document.getElementById("tempDisplay").textContent = (lastTemp ?? "--") + "°C";
+    document.getElementById("humDisplay").textContent  = (lastHum  ?? "--") + " %";
+    document.getElementById("obsTime").textContent     = lastTime ?? "--";
+
+    // ===== 最近 7 天 + 資料中斷自動斷線 =====
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const filteredX = [];
+    const tempY = [];
+    const humY = [];
+
+    for (let i = 0; i < labels.length; i++) {
+        const curDate = new Date(labels[i]);
+        if (curDate < sevenDaysAgo) continue;
+
+        if (filteredX.length > 0) {
+            const prevDate = new Date(filteredX[filteredX.length - 1]);
+            const diffHours = (curDate - prevDate) / (1000 * 60 * 60);
+            if (diffHours > 3) {
+                filteredX.push(null);
+                tempY.push(null);
+                humY.push(null);
+            }
+        }
+        filteredX.push(labels[i]);
+        tempY.push(temps[i]);
+        humY.push(hums[i]);
+    }
+
+    // ===== Chart.js =====
+    const ctx = document.getElementById('weatherChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: filteredX,
+            datasets: [
+                {
+                    label: '氣溫 (°C)',
+                    data: tempY,
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: '相對濕度 (%)',
+                    data: humY,
+                    borderColor: 'blue',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: 'y2'
+                }
+            ]
+        },
+        options: {
+            spanGaps: false,
+            interaction: { mode: 'index', intersect: false },
+            stacked: false,
+            scales: {
+                y1: {
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: '氣溫 (°C)' }
+                },
+                y2: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '濕度 (%)' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
+
