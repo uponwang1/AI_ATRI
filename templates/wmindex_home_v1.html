@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>Weather Master 首頁</title>
+  <style>
+    body { font-family: "Microsoft JhengHei"; margin: 40px; background:#fafafa; }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .title { font-size: 26px; font-weight: 800; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card {
+      background: white; border: 1px solid #e5e5e5; border-radius: 16px;
+      padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .card h2 { margin: 0 0 10px; font-size: 20px; }
+    .card p { margin: 0 0 14px; color:#333; line-height: 1.5; }
+    .btn {
+      display:inline-block; padding: 12px 16px; border-radius: 10px;
+      border: none; cursor:pointer; font-weight: 800; font-size: 15px;
+      text-decoration: none;
+    }
+    .btn-blue { background:#007bff; color:white; }
+    .btn-dark { background:#343a40; color:white; }
+    .hint { margin-top: 14px; color:#666; font-size: 13px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">🏠 Weather Master 首頁</div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>📊 分析站（weather8.1）</h2>
+        <p>CSV 雙表頭上傳、雙軸圖表、三段 GDD 比較、資料庫列表。</p>
+        <a class="btn btn-blue" id="goAnalysis">前往分析站</a>
+      </div>
+
+      <div class="card">
+        <h2>🌐 即時站（CWB8.1）</h2>
+        <p>逐時氣溫/濕度，最近 7 天圖表，資料中斷 >3 小時自動斷線。</p>
+        <a class="btn btn-dark" id="goRealtime">前往即時站</a>
+      </div>
+    </div>
+
+    <div class="hint">
+      ※ 這頁只做「入口導覽」。分析站與即時站請分別啟動對應程式。
+    </div>
+  </div>
+
+  <script>
+    // 自動用目前網域/IP 組合不同 port（你換 IP 不用改模板）
+    const host = window.location.hostname;
+    document.getElementById("goAnalysis").href = `http://${host}:{{ analysis_port }}/`;
+    document.getElementById("goRealtime").href = `http://${host}:{{ realtime_port }}/`;
+  </script>
+</body>
+</html>
+
+
+
